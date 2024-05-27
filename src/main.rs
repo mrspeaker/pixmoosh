@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 use macroquad::experimental::animation::*;
-use macroquad::ui::{root_ui, hash, widgets};
+use macroquad::ui::{root_ui, hash};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum CellType {
@@ -120,10 +120,11 @@ async fn main() {
     };
 
     ground.init();
-    let dino = Dino::new(1.0, (ground.h / 2 + ground.h / 4) as f32);
-    let dino2 = Dino::new((w as f32) / 2.0, (ground.h / 2 + ground.h / 4) as f32);
-    let mut dinos = [dino, dino2];
 
+    let mut dinos = vec!(
+        Dino::new(1.0, (ground.h / 2 + ground.h / 4) as f32),
+        Dino::new((w as f32) / 2.0, (ground.h / 2 + ground.h / 4) as f32)
+    );
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
 
