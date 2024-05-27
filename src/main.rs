@@ -44,19 +44,12 @@ impl Ground {
         return self.cells[y as usize * self.w + x as usize];
     }
 
-    fn get_buf(&self, x: i32, y: i32) -> CellType {
-        if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
-            return CellType::Bedrock;
-        }
-        return self.buf[y as usize * self.w + x as usize];
-    }
-
     fn set_cell(&mut self, x: i32, y: i32, val: CellType) -> bool {
         if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
             return false;
         }
         let cell = y as usize * self.w + x as usize;
-        let moved = self.moved[cell];
+        let moved = self.moved[cell] && val != CellType::Empty;
         if !moved {
             self.buf[cell] = val;
             self.moved[cell] = true;
@@ -191,45 +184,50 @@ async fn main() {
 
                 let cell_bl = ground.get_cell(x-1, y+1);
                 let cell_br = ground.get_cell(x+1, y+1);
-                match (cell_bl, cell_br) {
-                    (CellType::Empty, CellType::Empty) => {
-                        ground.set_cell(x, y, CellType::Empty);
-                        let dir = match rand::gen_range(0, 10) {
-                            v if v < 5 => -1,
-                            _ => 1
-                        };
-                        ground.set_cell(x+dir, y+1,cell );
-
-                    },
-                    (CellType::Empty, _) => {
-                        ground.set_cell(x, y, CellType::Empty);
-                        ground.set_cell(x-1, y+1, cell);
-                    },
-                    (_, CellType::Empty) => {
-                        ground.set_cell(x, y, CellType::Empty);
-                        ground.set_cell(x+1, y+1, cell);
-                    },
-                    _ => {
-                        if cell != CellType::Water {
-                            continue;
-                        }
-                        let cell_l = ground.get_cell(x-1, y);
-                        let cell_r = ground.get_cell(x+1, y);
-
-                        if cell_l != CellType::Empty && cell_r != CellType::Empty {
-                            continue;
-                        }
-                        let moved;
-                        if cell_l == CellType::Empty {
-                            moved = ground.set_cell(x-1, y, cell);
-                        } else {
-                            moved = ground.set_cell(x+1, y, cell);
-                        }
-                        if moved {
+                let dir = match rand::gen_range(0, 10) {
+                    v if v <= 5 => -1,
+                    _ => 1
+                };
+                if cell != CellType::Water {
+                    match (cell_bl, cell_br) {
+                        (CellType::Empty, CellType::Empty) => {
                             ground.set_cell(x, y, CellType::Empty);
-                        }
 
+                            ground.set_cell(x+dir, y+1,cell );
+
+                        },
+                        (CellType::Empty, _) => {
+                            ground.set_cell(x, y, CellType::Empty);
+                            ground.set_cell(x-1, y+1, cell);
+                        },
+                        (_, CellType::Empty) => {
+                            ground.set_cell(x, y, CellType::Empty);
+                            ground.set_cell(x+1, y+1, cell);
+                        },
+                        _ => {
+                            continue
+                        }
                     }
+                } else {
+                    let cell_l = ground.get_cell(x-1, y);
+                    let cell_r = ground.get_cell(x+1, y);
+
+                    if cell_l != CellType::Empty && cell_r != CellType::Empty {
+                        continue;
+                    }
+                    let moved;
+                    //if cell_l == CellType::Empty && cell_r == CellType::Empty {
+                    //    moved = ground.set_cell(x+dir, y, cell);
+                    //                } else
+                    if cell_l == CellType::Empty {
+                        moved = ground.set_cell(x-1, y, cell);
+                    } else {
+                        moved = ground.set_cell(x+1, y, cell);
+                    }
+                    if moved {
+                        ground.set_cell(x, y, CellType::Empty);
+                    }
+
                 }
             }
         }
