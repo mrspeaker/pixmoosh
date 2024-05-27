@@ -100,7 +100,7 @@ async fn main() {
     );
 
     loop {
-        clear_background(WHITE);
+        clear_background(DARKBLUE);
 
         if is_mouse_button_down(MouseButton::Left) {
             //let is_shift = is_key_down(KeyCode::LeftShift);
@@ -202,24 +202,29 @@ async fn main() {
                     CellType::Sand => BROWN,
                     CellType::AntiSand => GREEN,
                     CellType::Water => BLUE,
-                    CellType::Wood => BLACK,
+                    CellType::Wood => DARKBROWN,
                 },
             );
         }
 
         texture.update(&image);
 
-        dino.x += 0.2;
+        let sp = 0.2;
+        dino.x += sp;
 
         let g = ground.get_cell(dino.x as i32 +8, dino.y as i32 +16);
         let g2 = ground.get_cell(dino.x as i32 +8, dino.y as i32 +17);
 
-        if g == CellType::Sand && g2 == CellType::Sand {
+        // Climb
+        if g != CellType::Empty && g2 != CellType::Empty {
             dino.y -= 1.0;
         }
+        // Fall
         if g == CellType::Empty && g2 == CellType::Empty {
             dino.y += 1.0;
+            dino.x -= sp;
         }
+        // Wrap
         if dino.x as usize > w  {
             dino.x = -16.0;
         }
