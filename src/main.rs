@@ -16,7 +16,8 @@ struct Ground {
     w: usize,
     h: usize,
     cells: Vec<CellType>,
-    buf: Vec<CellType>
+    buf: Vec<CellType>,
+    moved: Vec<bool>,
 }
 
 impl Ground {
@@ -43,11 +44,24 @@ impl Ground {
         return self.cells[y as usize * self.w + x as usize];
     }
 
-    fn set_cell(&mut self, x: i32, y: i32, val: CellType) {
+    fn get_buf(&self, x: i32, y: i32) -> CellType {
         if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
-            return;
+            return CellType::Bedrock;
         }
-        self.buf[y as usize * self.w + x as usize] = val;
+        return self.buf[y as usize * self.w + x as usize];
+    }
+
+    fn set_cell(&mut self, x: i32, y: i32, val: CellType) -> bool {
+        if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
+            return false;
+        }
+        let cell = y as usize * self.w + x as usize;
+        let moved = self.moved[cell];
+        if !moved {
+            self.buf[cell] = val;
+            self.moved[cell] = true;
+        }
+        return !moved;
     }
 }
 
@@ -116,7 +130,8 @@ async fn main() {
         w,
         h,
         cells:  vec![CellType::Empty; w * h],
-        buf:  vec![CellType::Empty; w * h]
+        buf:  vec![CellType::Empty; w * h],
+        moved: vec![false; w * h]
     };
 
     ground.init();
@@ -176,7 +191,6 @@ async fn main() {
 
                 let cell_bl = ground.get_cell(x-1, y+1);
                 let cell_br = ground.get_cell(x+1, y+1);
-
                 match (cell_bl, cell_br) {
                     (CellType::Empty, CellType::Empty) => {
                         ground.set_cell(x, y, CellType::Empty);
@@ -199,19 +213,20 @@ async fn main() {
                         if cell != CellType::Water {
                             continue;
                         }
-                        let cell_t = ground.get_cell(x, y-1);
-                        if cell_t == CellType::Water {
-                            let cell_l = ground.get_cell(x-1, y);
-                            let cell_r = ground.get_cell(x+1, y);
-                            if cell_l != CellType::Empty && cell_r != CellType::Empty {
-                                continue;
-                            }
+                        let cell_l = ground.get_cell(x-1, y);
+                        let cell_r = ground.get_cell(x+1, y);
+
+                        if cell_l != CellType::Empty && cell_r != CellType::Empty {
+                            continue;
+                        }
+                        let moved;
+                        if cell_l == CellType::Empty {
+                            moved = ground.set_cell(x-1, y, cell);
+                        } else {
+                            moved = ground.set_cell(x+1, y, cell);
+                        }
+                        if moved {
                             ground.set_cell(x, y, CellType::Empty);
-                            if cell_l == CellType::Empty {
-                                ground.set_cell(x-1, y, cell);
-                            } else {
-                                ground.set_cell(x+1, y, cell);
-                            }
                         }
 
                     }
@@ -221,6 +236,7 @@ async fn main() {
 
         for i in 0..ground.buf.len() {
             ground.cells[i] = ground.buf[i];
+            ground.moved[i] = false;
 
             image.set_pixel(
                 (i % w) as u32,
