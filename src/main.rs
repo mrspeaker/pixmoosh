@@ -1,114 +1,10 @@
+mod ground;
+mod dino;
+
 use macroquad::prelude::*;
-use macroquad::experimental::animation::*;
 use macroquad::ui::{root_ui, hash};
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum CellType {
-    AntiSand,
-    Bedrock,
-    Empty,
-    Sand,
-    Water,
-    Wood,
-}
-
-struct Ground {
-    w: usize,
-    h: usize,
-    cells: Vec<CellType>,
-    buf: Vec<CellType>,
-    moved: Vec<bool>,
-}
-
-impl Ground {
-    fn init(&mut self) {
-        for y in 0..self.h as i32{
-            for x in 0..self.w as i32 {
-                if y as usize > self.h / 2 + self.h / 4 {
-                    self.set_cell(x, y, CellType::Sand);
-                } else {
-                    if rand::gen_range(0, 5) == 0 {
-                        self.set_cell(x, y, CellType::Sand);
-                    }
-                }
-                let off = y as usize * self.w + x as usize;
-                self.cells[off] = self.buf[off];
-            }
-        }
-    }
-
-    fn get_cell(&self, x: i32, y: i32) -> CellType {
-        if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
-            return CellType::Bedrock;
-        }
-        return self.cells[y as usize * self.w + x as usize];
-    }
-
-    fn set_cell(&mut self, x: i32, y: i32, val: CellType) -> bool {
-        if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
-            return false;
-        }
-        let cell = y as usize * self.w + x as usize;
-        let moved = self.moved[cell] && val != CellType::Empty;
-        if !moved {
-            self.buf[cell] = val;
-            self.moved[cell] = true;
-        }
-        return !moved;
-    }
-}
-
-struct Dino {
-    x: f32,
-    y: f32,
-    sprite: AnimatedSprite,
-}
-
-impl Dino {
-    pub fn new(x:f32, y:f32) -> Dino {
-        Dino {
-            x,
-            y,
-            sprite: AnimatedSprite::new(
-                16,
-                16,
-                &[
-                    Animation {
-                        name: "walk".to_string(),
-                        row: 0,
-                        frames: 4,
-                        fps: 6,
-                    },
-                ],
-                true,
-            )
-        }
-    }
-
-    fn update(&mut self, ground: &Ground, w:usize) {
-        let sp = 0.2;
-        self.x += sp;
-
-        let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
-        let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
-
-        // Climb
-        if g != CellType::Empty && g2 != CellType::Empty {
-            self.y -= 1.0;
-        }
-        // Fall
-        if g == CellType::Empty && g2 == CellType::Empty {
-            self.y += 1.0;
-            self.x -= sp;
-        }
-        // Wrap
-        if self.x as usize > w  {
-            self.x = -16.0;
-        }
-        self.sprite.update();
-    }
-
-}
+use ground::{Ground, CellType};
+use dino::Dino;
 
 #[macroquad::main("Life")]
 async fn main() {
@@ -137,8 +33,6 @@ async fn main() {
     let texture = Texture2D::from_image(&image);
 
     loop {
-        clear_background(DARKBLUE);
-
         if is_mouse_button_down(MouseButton::Left) {
             //let is_shift = is_key_down(KeyCode::LeftShift);
             let c = selected;// if is_shift {CellType::Wood } else { CellType::Sand };
@@ -252,6 +146,7 @@ async fn main() {
 
         texture.update(&image);
 
+        clear_background(DARKBLUE);
         draw_texture(&texture, 0., 0., WHITE);
         for d in dinos.iter_mut() {
             d.update(&ground, w);
