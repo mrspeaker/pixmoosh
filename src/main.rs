@@ -54,7 +54,53 @@ impl Ground {
 struct Dino {
     x: f32,
     y: f32,
-    anim: String
+    sprite: AnimatedSprite,
+}
+
+impl Dino {
+    pub fn new(x:f32, y:f32) -> Dino {
+        Dino {
+            x,
+            y,
+            sprite: AnimatedSprite::new(
+                16,
+                16,
+                &[
+                    Animation {
+                        name: "walk".to_string(),
+                        row: 0,
+                        frames: 4,
+                        fps: 6,
+                    },
+                ],
+                true,
+            )
+        }
+    }
+
+    fn update(&mut self, ground: &Ground, w:usize) {
+        let sp = 0.2;
+        self.x += sp;
+
+        let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
+        let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
+
+        // Climb
+        if g != CellType::Empty && g2 != CellType::Empty {
+            self.y -= 1.0;
+        }
+        // Fall
+        if g == CellType::Empty && g2 == CellType::Empty {
+            self.y += 1.0;
+            self.x -= sp;
+        }
+        // Wrap
+        if self.x as usize > w  {
+            self.x = -16.0;
+        }
+        self.sprite.update();
+    }
+
 }
 
 #[macroquad::main("Life")]
@@ -63,12 +109,6 @@ async fn main() {
     let h = screen_height() as usize;
 
     let mut selected = CellType::Sand;
-
-    let mut dino = Dino {
-        x: 1.0,
-        y: 0.0,
-        anim: "walk".to_string(),
-    };
 
     let tex2: Texture2D = load_texture("res/dino-Sheet.png").await.unwrap();
 
@@ -80,24 +120,12 @@ async fn main() {
     };
 
     ground.init();
-    dino.y = (ground.h / 2 + ground.h / 4) as f32;
+    let dino = Dino::new(1.0, (ground.h / 2 + ground.h / 4) as f32);
+    let dino2 = Dino::new((w as f32) / 2.0, (ground.h / 2 + ground.h / 4) as f32);
+    let mut dinos = [dino, dino2];
 
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
-
-    let mut sprite = AnimatedSprite::new(
-        16,
-        16,
-        &[
-            Animation {
-                name: "walk".to_string(),
-                row: 0,
-                frames: 4,
-                fps: 6,
-            },
-        ],
-        true,
-    );
 
     loop {
         clear_background(DARKBLUE);
@@ -209,39 +237,22 @@ async fn main() {
 
         texture.update(&image);
 
-        let sp = 0.2;
-        dino.x += sp;
-
-        let g = ground.get_cell(dino.x as i32 +8, dino.y as i32 +16);
-        let g2 = ground.get_cell(dino.x as i32 +8, dino.y as i32 +17);
-
-        // Climb
-        if g != CellType::Empty && g2 != CellType::Empty {
-            dino.y -= 1.0;
-        }
-        // Fall
-        if g == CellType::Empty && g2 == CellType::Empty {
-            dino.y += 1.0;
-            dino.x -= sp;
-        }
-        // Wrap
-        if dino.x as usize > w  {
-            dino.x = -16.0;
-        }
-
         draw_texture(&texture, 0., 0., WHITE);
-        draw_texture_ex(
-            &tex2,
-            dino.x,
-            dino.y,
-            WHITE,
-            DrawTextureParams {
-                source: Some(sprite.frame().source_rect),
-                dest_size: Some(sprite.frame().dest_size),
-                ..Default::default()
-            }
-        );
-        sprite.update();
+        for d in dinos.iter_mut() {
+            d.update(&ground, w);
+
+            draw_texture_ex(
+                &tex2,
+                d.x,
+                d.y,
+                WHITE,
+               DrawTextureParams {
+                    source: Some(d.sprite.frame().source_rect),
+                    dest_size: Some(d.sprite.frame().dest_size),
+                    ..Default::default()
+                }
+            );
+        }
 
         let _ = root_ui()
             .style_builder()
@@ -251,7 +262,6 @@ async fn main() {
 
         root_ui().window(hash!(), Vec2::new(10., 10.), Vec2::new(150., 25.), |ui| {
             //let (mouse_wheel_x, _) = mouse_wheel();
-            //ui.label(None, &format!("wheel x: {}", mouse_wheel_x));
             ui.same_line(0.0);
             if ui.button(None, "Sand") {
                 selected = CellType::Sand;
