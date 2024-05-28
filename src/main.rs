@@ -167,7 +167,7 @@ async fn main() {
         draw_texture(&texture, 0., 0., WHITE);
         for d in dinos.iter_mut() {
             d.update(&ground, w);
-            if d.job == Job::Building {
+            if d.job == Job::Build {
                 let xoff = if d.dir == Dir::West { 4 } else { 10 };
                 ground.set_cell((d.x as i32)+xoff, (d.y as i32)+16, CellType::Wood, true);
                 ground.set_cell((d.x as i32)+xoff, (d.y as i32)+17, CellType::Wood, true);

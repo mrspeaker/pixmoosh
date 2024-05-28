@@ -5,6 +5,7 @@ use crate::ground::{Ground, CellType};
 pub struct Dino {
     pub x: f32,
     pub y: f32,
+    pub vy: f32,
     pub dir: Dir,
     pub job: Job,
     pub sp: f32,
@@ -21,8 +22,9 @@ pub enum Dir {
 
 #[derive(PartialEq, Eq)]
 pub enum Job {
-    Walking,
-    Building
+    Idle,
+    Walk,
+    Build,
 }
 
 impl Dir {
@@ -36,14 +38,19 @@ impl Dir {
     }
 }
 
+fn one_in(num: i32) -> bool {
+    return rand::gen_range(0, num) == 1;
+}
+
 impl Dino {
     pub fn new(x:f32, y:f32, sp: f32) -> Dino {
         Dino {
             x,
             y,
             sp,
+            vy: 0.0,
             dir: Dir::East,
-            job: Job::Walking,
+            job: Job::Walk,
             sprite: AnimatedSprite::new(
                 16,
                 16,
@@ -61,20 +68,38 @@ impl Dino {
     }
 
     pub fn update(&mut self, ground: &Ground, w:usize) {
-        let sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
-        self.x += sp;
 
-        if rand::gen_range(0, 1000) == 1 {
+        if one_in(1000) {
             self.dir = self.dir.op();
         }
 
-        if self.job == Job::Walking && rand::gen_range(0, 1000) == 1 {
-            self.job = Job::Building;
-        }
-        if self.job == Job::Building && rand::gen_range(0, 500) == 1 {
-            self.job = Job::Walking;
+        match self.job {
+            Job::Idle => {
+                if one_in(500) {
+                    self.job = Job::Walk;
+                }
+            },
+            Job::Walk => {
+                if one_in(500) {
+                    if one_in(2) {
+                        self.job = Job::Idle;
+                    } else {
+                        self.job = Job::Build;
+                    }
+                }
+            },
+            Job::Build => {
+                if one_in(500) {
+                    self.job = Job::Idle;
+                }
+            }
         }
 
+        let mut sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
+        if self.job == Job::Idle {
+            sp = 0.0;
+        }
+        self.x += sp;
 
 
         let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
@@ -86,11 +111,14 @@ impl Dino {
         }
         // Fall
         if g == CellType::Empty && g2 == CellType::Empty {
-            self.y += 1.0;
+            self.vy += 1.0;
+            self.y += self.vy;
             if g3 == CellType::Empty {
                 self.x -= sp;
                 self.y += 1.0;
             }
+        } else {
+            self.vy = 0.0;
         }
         // Wrap
         if self.x as usize > w  {
