@@ -1,17 +1,49 @@
+use macroquad::prelude::*;
 use macroquad::experimental::animation::*;
 use crate::ground::{Ground, CellType};
 
 pub struct Dino {
     pub x: f32,
     pub y: f32,
+    pub dir: Dir,
+    pub job: Job,
+    pub sp: f32,
     pub sprite: AnimatedSprite,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum Dir {
+    North,
+    East,
+    South,
+    West
+}
+
+#[derive(PartialEq, Eq)]
+pub enum Job {
+    Walking,
+    Building
+}
+
+impl Dir {
+    pub fn op(&self) -> Dir {
+        match self {
+            Dir::North => Dir::South,
+            Dir::East => Dir::West,
+            Dir::South => Dir::North,
+            Dir::West => Dir::East,
+        }
+    }
+}
+
 impl Dino {
-    pub fn new(x:f32, y:f32) -> Dino {
+    pub fn new(x:f32, y:f32, sp: f32) -> Dino {
         Dino {
             x,
             y,
+            sp,
+            dir: Dir::East,
+            job: Job::Walking,
             sprite: AnimatedSprite::new(
                 16,
                 16,
@@ -29,12 +61,25 @@ impl Dino {
     }
 
     pub fn update(&mut self, ground: &Ground, w:usize) {
-        let sp = 0.2;
+        let sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
         self.x += sp;
+
+        if rand::gen_range(0, 1000) == 1 {
+            self.dir = self.dir.op();
+        }
+
+        if self.job == Job::Walking && rand::gen_range(0, 1000) == 1 {
+            self.job = Job::Building;
+        }
+        if self.job == Job::Building && rand::gen_range(0, 500) == 1 {
+            self.job = Job::Walking;
+        }
+
+
 
         let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
         let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
-
+        let g3 = ground.get_cell(self.x as i32 +8, self.y as i32 +18);
         // Climb
         if g != CellType::Empty && g2 != CellType::Empty {
             self.y -= 1.0;
@@ -42,11 +87,17 @@ impl Dino {
         // Fall
         if g == CellType::Empty && g2 == CellType::Empty {
             self.y += 1.0;
-            self.x -= sp;
+            if g3 == CellType::Empty {
+                self.x -= sp;
+                self.y += 1.0;
+            }
         }
         // Wrap
         if self.x as usize > w  {
             self.x = -16.0;
+        }
+        if self.x < -16.0 {
+            self.x = w as f32;
         }
         self.sprite.update();
     }

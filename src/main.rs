@@ -1,10 +1,13 @@
-mod ground;
-mod dino;
 
 use macroquad::prelude::*;
 use macroquad::ui::{root_ui, hash};
 use ground::{Ground, CellType};
-use dino::Dino;
+use dino::{Dino, Dir, Job};
+use resources::load_resources;
+
+mod ground;
+mod dino;
+mod resources;
 
 #[macroquad::main("Life")]
 async fn main() {
@@ -13,7 +16,7 @@ async fn main() {
 
     let mut selected = CellType::Sand;
 
-    let tex2: Texture2D = load_texture("res/dino-Sheet.png").await.unwrap();
+    let resources = load_resources().await;
 
     let mut ground = Ground {
         w,
@@ -25,10 +28,26 @@ async fn main() {
 
     ground.init();
 
-    let mut dinos = vec!(
+    let mut dinos: Vec<Dino> = Vec::new();
+    for i in 0..50 {
+        let mut d = Dino::new(
+            rand::gen_range(0, w) as f32,
+            rand::gen_range(h / 2, h - 100) as f32,
+            rand::gen_range(10, 30) as f32 / 10.0);
+        if i > 25 {
+            d.dir = Dir::West;
+        }
+        dinos.push(d);
+    }
+    /*vec!(
         Dino::new(1.0, (ground.h / 2 + ground.h / 4) as f32),
-        Dino::new((w as f32) / 2.0, (ground.h / 2 + ground.h / 4) as f32)
-    );
+        Dino::new(100.0, (ground.h / 2) as f32),
+        Dino::new((w as f32) / 2.0, (ground.h / 2 + ground.h / 4) as f32),
+        Dino::new((w as f32) - 20.0, (ground.h / 2 + ground.h / 6) as f32)
+    );*/
+    dinos[3].dir = Dir::West;
+
+
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
 
@@ -150,15 +169,21 @@ async fn main() {
         draw_texture(&texture, 0., 0., WHITE);
         for d in dinos.iter_mut() {
             d.update(&ground, w);
+            if d.job == Job::Building {
+                let xoff = if d.dir == Dir::West { 4 } else { 10 };
+                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+16, CellType::Wood);
+                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+17, CellType::Wood);
+            }
 
             draw_texture_ex(
-                &tex2,
+                &resources.dino,
                 d.x,
                 d.y,
                 WHITE,
-               DrawTextureParams {
+                DrawTextureParams {
                     source: Some(d.sprite.frame().source_rect),
                     dest_size: Some(d.sprite.frame().dest_size),
+                    flip_x: d.dir == Dir::West,
                     ..Default::default()
                 }
             );
