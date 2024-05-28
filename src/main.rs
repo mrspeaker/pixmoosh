@@ -60,7 +60,7 @@ async fn main() {
             let size = 8;
             for i in -size..size {
                 for j in -size..size {
-                    ground.set_cell((x as i32)+i, (y as i32)-j, c);
+                    ground.set_cell((x as i32)+i, (y as i32)-j, c, false);
                 }
             }
         }
@@ -69,7 +69,7 @@ async fn main() {
             let (x, y) = mouse_position();
             for i in -10..10 {
                 for j in -10..10 {
-                    ground.set_cell((x as i32)+i, (y as i32)-j, CellType::AntiSand);
+                    ground.set_cell((x as i32)+i, (y as i32)-j, CellType::AntiSand, false);
                 }
             }
         }
@@ -85,13 +85,13 @@ async fn main() {
 
                 let cell_d = ground.get_cell(x, y+1);
                 if cell_d == CellType::Empty {
-                    ground.set_cell(x, y, CellType::Empty);
-                    ground.set_cell(x, y+1, cell);
+                    ground.set_cell(x, y, CellType::Empty, false);
+                    ground.set_cell(x, y+1, cell, true);
                     continue;
                 }
                 if cell == CellType::AntiSand && cell_d != CellType::AntiSand {
-                    ground.set_cell(x, y, CellType::Empty);
-                    ground.set_cell(x, y+1, CellType::Empty);
+                    ground.set_cell(x, y, CellType::Empty, false);
+                    ground.set_cell(x, y+1, CellType::Empty, false);
                     continue;
                 }
 
@@ -104,18 +104,17 @@ async fn main() {
                 if cell != CellType::Water {
                     match (cell_bl, cell_br) {
                         (CellType::Empty, CellType::Empty) => {
-                            ground.set_cell(x, y, CellType::Empty);
-
-                            ground.set_cell(x+dir, y+1,cell );
+                            ground.set_cell(x, y, CellType::Empty, false);
+                            ground.set_cell(x+dir, y+1,cell, true);
 
                         },
                         (CellType::Empty, _) => {
-                            ground.set_cell(x, y, CellType::Empty);
-                            ground.set_cell(x-1, y+1, cell);
+                            ground.set_cell(x, y, CellType::Empty, false);
+                            ground.set_cell(x-1, y+1, cell, true);
                         },
                         (_, CellType::Empty) => {
-                            ground.set_cell(x, y, CellType::Empty);
-                            ground.set_cell(x+1, y+1, cell);
+                            ground.set_cell(x, y, CellType::Empty, false);
+                            ground.set_cell(x+1, y+1, cell, true);
                         },
                         _ => {
                             continue
@@ -129,16 +128,15 @@ async fn main() {
                         continue;
                     }
                     let moved;
-                    //if cell_l == CellType::Empty && cell_r == CellType::Empty {
-                    //    moved = ground.set_cell(x+dir, y, cell);
-                    //                } else
-                    if cell_l == CellType::Empty {
-                        moved = ground.set_cell(x-1, y, cell);
+                    if cell_l == CellType::Empty && cell_r == CellType::Empty {
+                        moved = ground.set_cell(x+dir, y, cell, true);
+                    } else if cell_l == CellType::Empty {
+                        moved = ground.set_cell(x-1, y, cell, true);
                     } else {
-                        moved = ground.set_cell(x+1, y, cell);
+                        moved = ground.set_cell(x+1, y, cell, true);
                     }
                     if moved {
-                        ground.set_cell(x, y, CellType::Empty);
+                        ground.set_cell(x, y, CellType::Empty, false);
                     }
 
                 }
@@ -171,8 +169,8 @@ async fn main() {
             d.update(&ground, w);
             if d.job == Job::Building {
                 let xoff = if d.dir == Dir::West { 4 } else { 10 };
-                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+16, CellType::Wood);
-                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+17, CellType::Wood);
+                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+16, CellType::Wood, true);
+                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+17, CellType::Wood, true);
             }
 
             draw_texture_ex(

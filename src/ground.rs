@@ -33,11 +33,11 @@ impl Ground {
         for y in 0..self.h as i32{
             for x in 0..self.w as i32 {
                 if y as usize > self.h / 2 + self.h / 4 {
-                    self.set_cell(x, y, CellType::Sand);
+                    self.set_cell(x, y, CellType::Sand, false);
                 }
                 if y as usize > self.h / 2  {
                     if rand::gen_range(0, 5) == 0 {
-                        self.set_cell(x, y, CellType::Sand);
+                        self.set_cell(x, y, CellType::Sand, false);
                     }
                 }
                 let off = y as usize * self.w + x as usize;
@@ -53,7 +53,7 @@ impl Ground {
         return self.cells[y as usize * self.w + x as usize];
     }
 
-    pub fn set_cell(&mut self, x: i32, y: i32, val: CellType) -> bool {
+    pub fn set_cell(&mut self, x: i32, y: i32, val: CellType, do_move: bool) -> bool {
         if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
             return false;
         }
@@ -61,7 +61,9 @@ impl Ground {
         let moved = self.moved[cell] && val != CellType::Empty;
         if !moved {
             self.buf[cell] = val;
-            self.moved[cell] = true;
+            if do_move {
+                self.moved[cell] = true;
+            }
         }
         return !moved;
     }
