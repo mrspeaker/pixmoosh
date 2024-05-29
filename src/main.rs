@@ -10,6 +10,7 @@ mod ground;
 mod dino;
 mod resources;
 mod maf;
+mod tests;
 
 pub const BG: Color = Color::new(0.0, 0.423, 0.493, 1.00);
 pub const WATER: Color = Color::new(0.325, 0.549, 0.549, 1.00);
@@ -59,7 +60,7 @@ async fn main() {
             let size = 8;
             for i in -size..size {
                 for j in -size..size {
-                    ground.set_cell((x as i32)+i, (y as i32)-j, c, false);
+                    ground.set_cell((x as i32)+i, (y as i32)-j, c);
                 }
             }
         }
@@ -68,21 +69,21 @@ async fn main() {
             let (x, y) = mouse_position();
             for i in -10..10 {
                 for j in -10..10 {
-                    ground.set_cell((x as i32)+i, (y as i32)-j, CellType::AntiSand, false);
+                    ground.set_cell((x as i32)+i, (y as i32)-j, CellType::AntiSand);
                 }
             }
         }
 
-        ground.update(w, h);
+        ground.update();
 
-        for i in 0..ground.buf.len() {
-            ground.cells[i] = ground.buf[i];
+        for i in 0..ground.cells.len() {
+            //ground.cells[i] = ground.buf[i];
             ground.moved[i] = false;
 
             image.set_pixel(
                 (i % w) as u32,
                 (i / w) as u32,
-                match ground.buf[i as usize] {
+                match ground.cells[i as usize] {
                     CellType::Empty => BLANK,
                     CellType::Bedrock => RED,
                     CellType::Sand if i % 2 == 0 => SAND2,
@@ -102,7 +103,7 @@ async fn main() {
             let v = d.update(&ground, w, h);
 
             for gc in v {
-                ground.set_cell(gc.x, gc.y, gc.cell, true);
+                ground.set_cell(gc.x, gc.y, gc.cell);
             }
 
             draw_texture_ex(

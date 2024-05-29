@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use std::fmt;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CellType {
@@ -8,6 +9,19 @@ pub enum CellType {
     Sand,
     Water,
     Wood,
+}
+impl fmt::Display for CellType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CellType::Empty => write!(f, "_"),
+            CellType::Sand => write!(f, "S"),
+            _ => write!(f, "?")
+        }
+    }
+}
+
+pub struct Cell {
+    kind: CellType
 }
 
 pub struct GroundChange {
@@ -23,6 +37,20 @@ pub struct Ground {
     pub buf: Vec<CellType>,
     pub moved: Vec<bool>,
 }
+impl fmt::Display for Ground {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let w = self.w.min(10);
+        let h = self.h.min(10);
+        for j in 0..h {
+            for i in 0..w {
+                write!(f, "{}", self.cells[j * self.w + i])?;
+            }
+            write!(f, "\n")?;
+        }
+        return Ok(());
+    }
+}
+
 
 impl Ground {
     pub fn new(w: usize, h: usize) -> Ground {
@@ -42,7 +70,7 @@ impl Ground {
         let h = rand::gen_range(5,10);
         for x in x1..x1+w {
             for y in y1..y1+h {
-                self.set_cell(x as i32, y as i32, CellType::Wood, false);
+                self.set_cell(x as i32, y as i32, CellType::Wood);
             }
         }
     }
@@ -51,11 +79,11 @@ impl Ground {
         for y in 0..self.h as i32{
             for x in 0..self.w as i32 {
                 if y as usize > self.h / 2 + self.h / 4 {
-                    self.set_cell(x, y, CellType::Wood, false);
+                    self.set_cell(x, y, CellType::Wood);
                 }
                 else  {
                     if rand::gen_range(0, 5) == 0 {
-                        self.set_cell(x, y, CellType::Sand, false);
+                        self.set_cell(x, y, CellType::Sand);
                     }
                 }
             }
@@ -65,53 +93,68 @@ impl Ground {
             self.rnd_line();
         }
 
-        for i in 0..self.cells.len() {
-            self.cells[i] = self.buf[i];
+        //for i in 0..self.cells.len() {
+            //self.cells[i] = self.buf[i];
+        //}
+    }
+
+    fn swap(&mut self, x: i32, y: i32, xo:i32, yo: i32) {
+        let src = self.get_cell(x, y);
+        let dst = self.get_cell(x+xo, y+yo);
+        if self.set_cell(x + xo, y + yo, src) {
+          self.set_cell(x, y, dst);
         }
     }
 
-    pub fn update(&mut self, w: usize, h: usize) {
-        for y in 0..h as i32 {
-            for x in 0..w as i32 {
-                let cell = self.get_cell(x, y);
-                if cell == CellType::Empty { continue; }
+    pub fn rnd(&mut self) -> i32 {
+        return rand::gen_range(0, 10);
+    }
 
-                if cell == CellType::Wood {
+    pub fn update(&mut self) {
+        for i in 0..self.cells.len() {
+            self.moved[i] = false;
+        }
+
+        for y in 0..self.h as i32 {
+            for x in 0..self.w as i32 {
+                let cell = self.get_cell(x, y);
+
+                if cell == CellType::Empty { continue; }
+                if cell == CellType::Wood { continue; }
+                let i = y as usize * self.w + x as usize;
+                if self.moved[i] {
+                    //println!("moved");
                     continue;
                 }
 
                 let cell_d = self.get_cell(x, y+1);
+
+                // Everything falls down...
                 if cell_d == CellType::Empty {
-                    self.set_cell(x, y, CellType::Empty, false);
-                    self.set_cell(x, y+1, cell, true);
-                    continue;
-                }
-                if cell == CellType::AntiSand && cell_d != CellType::AntiSand {
-                    self.set_cell(x, y, CellType::Empty, false);
-                    self.set_cell(x, y+1, CellType::Empty, false);
+                    self.swap(x, y, 0, 1);
                     continue;
                 }
 
-                let cell_bl = self.get_cell(x-1, y+1);
-                let cell_br = self.get_cell(x+1, y+1);
-                let dir = match rand::gen_range(0, 10) {
-                    v if v <= 5 => -1,
-                    _ => 1
-                };
+                if cell == CellType::AntiSand && cell_d != CellType::AntiSand {
+                    self.set_cell(x, y, CellType::Empty);
+                    self.set_cell(x, y+1, CellType::Empty);
+                    continue;
+                }
+
+                let dir = if i % 2 == 0 { -1} else {1};
+
                 if cell != CellType::Water {
+                    let cell_bl = self.get_cell(x-1, y+1);
+                    let cell_br = self.get_cell(x+1, y+1);
                     match (cell_bl, cell_br) {
                         (CellType::Empty, CellType::Empty) => {
-                            self.set_cell(x, y, CellType::Empty, false);
-                            self.set_cell(x+dir, y+1,cell, true);
-
-                        },
-                        (CellType::Empty, _) => {
-                            self.set_cell(x, y, CellType::Empty, false);
-                            self.set_cell(x-1, y+1, cell, true);
+                            self.swap(x, y, dir, 1);
                         },
                         (_, CellType::Empty) => {
-                            self.set_cell(x, y, CellType::Empty, false);
-                            self.set_cell(x+1, y+1, cell, true);
+                            self.swap(x, y, 1, 1);
+                        },
+                        (CellType::Empty, _) => {
+                            self.swap(x, y, -1, 1);
                         },
                         _ => {
                             continue
@@ -124,16 +167,12 @@ impl Ground {
                     if cell_l != CellType::Empty && cell_r != CellType::Empty {
                         continue;
                     }
-                    let moved;
                     if cell_l == CellType::Empty && cell_r == CellType::Empty {
-                        moved = self.set_cell(x+dir, y, cell, true);
+                        self.swap(x, y, dir, 0);
                     } else if cell_l == CellType::Empty {
-                        moved = self.set_cell(x-1, y, cell, true);
+                        self.swap(x, y, -1, 0);
                     } else {
-                        moved = self.set_cell(x+1, y, cell, true);
-                    }
-                    if moved {
-                        self.set_cell(x, y, CellType::Empty, false);
+                        self.swap(x, y, 1, 0);
                     }
 
                 }
@@ -149,17 +188,15 @@ impl Ground {
         return self.cells[y as usize * self.w + x as usize];
     }
 
-    pub fn set_cell(&mut self, x: i32, y: i32, val: CellType, do_move: bool) -> bool {
+    pub fn set_cell(&mut self, x: i32, y: i32, val: CellType) -> bool {
         if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
             return false;
         }
         let cell = y as usize * self.w + x as usize;
-        let moved = self.moved[cell] && val != CellType::Empty;
+        let moved = self.moved[cell];
         if !moved {
-            self.buf[cell] = val;
-            if do_move {
-                self.moved[cell] = true;
-            }
+            self.cells[cell] = val;
+            self.moved[cell] = val != CellType::Empty;
         }
         return !moved;
     }
