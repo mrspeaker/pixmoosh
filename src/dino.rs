@@ -81,7 +81,7 @@ impl Dino {
         }
     }
 
-    pub fn update(&mut self, ground: &Ground, w:usize) -> Vec<GroundChange> {
+    pub fn update(&mut self, ground: &Ground, w:usize, h:usize) -> Vec<GroundChange> {
 
         let mut v:Vec<GroundChange> = Vec::new();
 
@@ -120,7 +120,7 @@ impl Dino {
                 }
             },
             Job::Dig => {
-                if one_in(100) {
+                if one_in(50) {
                     self.job = Job::Idle;
                     self.sprite.set_animation(0);
                 }
@@ -136,7 +136,6 @@ impl Dino {
 
         let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
         let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
-        let g3 = ground.get_cell(self.x as i32 +8, self.y as i32 +18);
         // Climb
         if is_solid(g) && is_solid(g2) {
             self.y -= 1.0;
@@ -145,6 +144,7 @@ impl Dino {
         if !is_solid(g) && !is_solid(g2) {
             self.vy += 1.0;
             self.y += self.vy;
+            let g3 = ground.get_cell(self.x as i32 +8, self.y as i32 +18);
             if !is_solid(g3) {
                 self.x -= sp;
                 self.y += 1.0;
@@ -152,6 +152,8 @@ impl Dino {
         } else {
             self.vy = 0.0;
         }
+
+        // Jobs
         if self.job == Job::Dig {
             self.vy = 0.0;
             v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 16, cell:CellType::Empty});
@@ -182,6 +184,9 @@ impl Dino {
         }
         if self.x < -16.0 {
             self.x = (w as f32) - 1.0;
+        }
+        if self.y < -16.0 {
+            self.y = (h as f32) - 16.0;
         }
         self.sprite.update();
         return v;

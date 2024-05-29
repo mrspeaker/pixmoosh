@@ -11,7 +11,11 @@ mod dino;
 mod resources;
 mod maf;
 
-pub const WOODBROWN: Color = Color::new(0.40, 0.32, 0.21, 1.00);
+pub const BG: Color = Color::new(0.0, 0.423, 0.493, 1.00);
+pub const WATER: Color = Color::new(0.325, 0.549, 0.549, 1.00);
+pub const SAND: Color = Color::new(0.862, 0.549, 0.227, 1.00);
+pub const SAND2: Color = Color::new(0.752, 0.49, 0.29, 1.00);
+pub const WOOD: Color = Color::new(0.678, 0.419, 0.282, 1.00);
 
 #[macroquad::main("Life")]
 async fn main() {
@@ -148,20 +152,21 @@ async fn main() {
                 match ground.buf[i as usize] {
                     CellType::Empty => BLANK,
                     CellType::Bedrock => RED,
-                    CellType::Sand => BROWN,
+                    CellType::Sand if i % 2 == 0 => SAND2,
+                    CellType::Sand => SAND,
                     CellType::AntiSand => GREEN,
-                    CellType::Water => BLUE,
-                    CellType::Wood => WOODBROWN,
+                    CellType::Water => WATER,
+                    CellType::Wood => WOOD,
                 },
             );
         }
 
         texture.update(&image);
 
-        clear_background(DARKBLUE);
+        clear_background(BG);
         draw_texture(&texture, 0., 0., WHITE);
         for d in dinos.iter_mut() {
-            let v = d.update(&ground, w);
+            let v = d.update(&ground, w, h);
 
             for gc in v {
                 ground.set_cell(gc.x, gc.y, gc.cell, true);
