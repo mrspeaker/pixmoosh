@@ -70,6 +70,78 @@ impl Ground {
         }
     }
 
+    pub fn update(&mut self, w: usize, h: usize) {
+        for y in 0..h as i32 {
+            for x in 0..w as i32 {
+                let cell = self.get_cell(x, y);
+                if cell == CellType::Empty { continue; }
+
+                if cell == CellType::Wood {
+                    continue;
+                }
+
+                let cell_d = self.get_cell(x, y+1);
+                if cell_d == CellType::Empty {
+                    self.set_cell(x, y, CellType::Empty, false);
+                    self.set_cell(x, y+1, cell, true);
+                    continue;
+                }
+                if cell == CellType::AntiSand && cell_d != CellType::AntiSand {
+                    self.set_cell(x, y, CellType::Empty, false);
+                    self.set_cell(x, y+1, CellType::Empty, false);
+                    continue;
+                }
+
+                let cell_bl = self.get_cell(x-1, y+1);
+                let cell_br = self.get_cell(x+1, y+1);
+                let dir = match rand::gen_range(0, 10) {
+                    v if v <= 5 => -1,
+                    _ => 1
+                };
+                if cell != CellType::Water {
+                    match (cell_bl, cell_br) {
+                        (CellType::Empty, CellType::Empty) => {
+                            self.set_cell(x, y, CellType::Empty, false);
+                            self.set_cell(x+dir, y+1,cell, true);
+
+                        },
+                        (CellType::Empty, _) => {
+                            self.set_cell(x, y, CellType::Empty, false);
+                            self.set_cell(x-1, y+1, cell, true);
+                        },
+                        (_, CellType::Empty) => {
+                            self.set_cell(x, y, CellType::Empty, false);
+                            self.set_cell(x+1, y+1, cell, true);
+                        },
+                        _ => {
+                            continue
+                        }
+                    }
+                } else {
+                    let cell_l = self.get_cell(x-1, y);
+                    let cell_r = self.get_cell(x+1, y);
+
+                    if cell_l != CellType::Empty && cell_r != CellType::Empty {
+                        continue;
+                    }
+                    let moved;
+                    if cell_l == CellType::Empty && cell_r == CellType::Empty {
+                        moved = self.set_cell(x+dir, y, cell, true);
+                    } else if cell_l == CellType::Empty {
+                        moved = self.set_cell(x-1, y, cell, true);
+                    } else {
+                        moved = self.set_cell(x+1, y, cell, true);
+                    }
+                    if moved {
+                        self.set_cell(x, y, CellType::Empty, false);
+                    }
+
+                }
+            }
+        }
+
+    }
+
     pub fn get_cell(&self, x: i32, y: i32) -> CellType {
         if x < 0 || x > (self.w - 1) as i32 || y < 0 || y > (self.h - 1) as i32 {
             return CellType::Bedrock;

@@ -73,74 +73,7 @@ async fn main() {
             }
         }
 
-        for y in 0..h as i32 {
-            for x in 0..w as i32 {
-                let cell = ground.get_cell(x, y);
-                if cell == CellType::Empty { continue; }
-
-                if cell == CellType::Wood {
-                    continue;
-                }
-
-                let cell_d = ground.get_cell(x, y+1);
-                if cell_d == CellType::Empty {
-                    ground.set_cell(x, y, CellType::Empty, false);
-                    ground.set_cell(x, y+1, cell, true);
-                    continue;
-                }
-                if cell == CellType::AntiSand && cell_d != CellType::AntiSand {
-                    ground.set_cell(x, y, CellType::Empty, false);
-                    ground.set_cell(x, y+1, CellType::Empty, false);
-                    continue;
-                }
-
-                let cell_bl = ground.get_cell(x-1, y+1);
-                let cell_br = ground.get_cell(x+1, y+1);
-                let dir = match rand::gen_range(0, 10) {
-                    v if v <= 5 => -1,
-                    _ => 1
-                };
-                if cell != CellType::Water {
-                    match (cell_bl, cell_br) {
-                        (CellType::Empty, CellType::Empty) => {
-                            ground.set_cell(x, y, CellType::Empty, false);
-                            ground.set_cell(x+dir, y+1,cell, true);
-
-                        },
-                        (CellType::Empty, _) => {
-                            ground.set_cell(x, y, CellType::Empty, false);
-                            ground.set_cell(x-1, y+1, cell, true);
-                        },
-                        (_, CellType::Empty) => {
-                            ground.set_cell(x, y, CellType::Empty, false);
-                            ground.set_cell(x+1, y+1, cell, true);
-                        },
-                        _ => {
-                            continue
-                        }
-                    }
-                } else {
-                    let cell_l = ground.get_cell(x-1, y);
-                    let cell_r = ground.get_cell(x+1, y);
-
-                    if cell_l != CellType::Empty && cell_r != CellType::Empty {
-                        continue;
-                    }
-                    let moved;
-                    if cell_l == CellType::Empty && cell_r == CellType::Empty {
-                        moved = ground.set_cell(x+dir, y, cell, true);
-                    } else if cell_l == CellType::Empty {
-                        moved = ground.set_cell(x-1, y, cell, true);
-                    } else {
-                        moved = ground.set_cell(x+1, y, cell, true);
-                    }
-                    if moved {
-                        ground.set_cell(x, y, CellType::Empty, false);
-                    }
-
-                }
-            }
-        }
+        ground.update(w, h);
 
         for i in 0..ground.buf.len() {
             ground.cells[i] = ground.buf[i];
