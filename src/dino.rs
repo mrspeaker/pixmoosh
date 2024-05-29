@@ -159,11 +159,21 @@ impl Dino {
             v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 16, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 16, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 16, cell:CellType::Empty});
+
             v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 17, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+7, y:(self.y as i32) + 17, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 17, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 17, cell:CellType::Empty});
             v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 17, cell:CellType::Empty});
+        }
+        if self.job == Job::Build {
+            let xoff = if self.dir == Dir::West { 4 } else { 10 };
+            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 16, cell:CellType::Wood});
+            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 17, cell:CellType::Wood});
+            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 18, cell:CellType::Wood});
+            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 16, cell:CellType::Wood});
+            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 17, cell:CellType::Wood});
+            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 18, cell:CellType::Wood});
         }
 
         // Wrap
