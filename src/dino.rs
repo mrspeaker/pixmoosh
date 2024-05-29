@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 use macroquad::experimental::animation::*;
-use crate::ground::{Ground, CellType};
+use crate::ground::{Ground, CellType, GroundChange};
 use crate::maf::one_in;
 
 pub struct Dino {
@@ -26,6 +26,7 @@ pub enum Job {
     Idle,
     Walk,
     Build,
+    Dig,
 }
 
 fn is_solid(t: CellType) -> bool {
@@ -80,7 +81,9 @@ impl Dino {
         }
     }
 
-    pub fn update(&mut self, ground: &Ground, w:usize) {
+    pub fn update(&mut self, ground: &Ground, w:usize) -> Vec<GroundChange> {
+
+        let mut v:Vec<GroundChange> = Vec::new();
 
         if one_in(1000) {
             self.dir = self.dir.op();
@@ -89,8 +92,14 @@ impl Dino {
         match self.job {
             Job::Idle => {
                 if one_in(500) {
-                    self.job = Job::Walk;
-                    self.sprite.set_animation(1);
+                    if one_in(5) {
+                        self.job = Job::Dig;
+                        self.sprite.set_animation(0);
+                    } else {
+                        self.job = Job::Walk;
+                        self.sprite.set_animation(1);
+
+                    }
                 }
             },
             Job::Walk => {
@@ -109,12 +118,18 @@ impl Dino {
                     self.job = Job::Idle;
                     self.sprite.set_animation(0);
                 }
+            },
+            Job::Dig => {
+                if one_in(100) {
+                    self.job = Job::Idle;
+                    self.sprite.set_animation(0);
+                }
             }
         }
 
         let mut sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
         let is_idle = self.job == Job::Idle;
-        if is_idle {
+        if is_idle || self.job == Job::Dig {
             sp = 0.0;
         }
         self.x += sp;
@@ -137,6 +152,20 @@ impl Dino {
         } else {
             self.vy = 0.0;
         }
+        if self.job == Job::Dig {
+            self.vy = 0.0;
+            v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+7, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 17, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+7, y:(self.y as i32) + 17, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 17, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 17, cell:CellType::Empty});
+            v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 17, cell:CellType::Empty});
+        }
+
         // Wrap
         if self.x as usize > w  {
             self.x = -16.0;
@@ -145,6 +174,7 @@ impl Dino {
             self.x = (w as f32) - 1.0;
         }
         self.sprite.update();
+        return v;
     }
 
 }

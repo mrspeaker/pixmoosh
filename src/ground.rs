@@ -10,6 +10,12 @@ pub enum CellType {
     Wood,
 }
 
+pub struct GroundChange {
+    pub x: i32,
+    pub y: i32,
+    pub cell: CellType
+}
+
 pub struct Ground {
     pub w: usize,
     pub h: usize,
