@@ -29,20 +29,38 @@ impl Ground {
         }
     }
 
+    fn rnd_line(&mut self) {
+        let x1 = rand::gen_range(0, self.w);
+        let w = rand::gen_range(20, 130);
+        let y1 = rand::gen_range(40, self.h / 2 +100);
+        let h = rand::gen_range(5,10);
+        for x in x1..x1+w {
+            for y in y1..y1+h {
+                self.set_cell(x as i32, y as i32, CellType::Wood, false);
+            }
+        }
+    }
+
     pub fn init(&mut self) {
         for y in 0..self.h as i32{
             for x in 0..self.w as i32 {
                 if y as usize > self.h / 2 + self.h / 4 {
-                    self.set_cell(x, y, CellType::Sand, false);
+                    self.set_cell(x, y, CellType::Wood, false);
                 }
-                if y as usize > self.h / 2  {
+                else  {
                     if rand::gen_range(0, 5) == 0 {
                         self.set_cell(x, y, CellType::Sand, false);
                     }
                 }
-                let off = y as usize * self.w + x as usize;
-                self.cells[off] = self.buf[off];
             }
+        }
+        let num_lines = 30;// rand::gen_range(20, 40);
+        for _ in 0..num_lines {
+            self.rnd_line();
+        }
+
+        for i in 0..self.cells.len() {
+            self.cells[i] = self.buf[i];
         }
     }
 

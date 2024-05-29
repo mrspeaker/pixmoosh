@@ -28,6 +28,15 @@ pub enum Job {
     Build,
 }
 
+fn is_solid(t: CellType) -> bool {
+    match t {
+        CellType::Wood => true,
+        CellType::Sand => true,
+        CellType::Bedrock => true,
+        _ => false
+    }
+}
+
 impl Dir {
     pub fn op(&self) -> Dir {
         match self {
@@ -81,18 +90,18 @@ impl Dino {
             Job::Idle => {
                 if one_in(500) {
                     self.job = Job::Walk;
-                    self.sprite.set_animation(0);
+                    self.sprite.set_animation(1);
                 }
             },
             Job::Walk => {
                 if one_in(500) {
                     if one_in(2) {
                         self.job = Job::Idle;
+                        self.sprite.set_animation(0);
                     } else {
                         self.job = Job::Build;
+                        self.sprite.set_animation(1);
                     }
-                    self.sprite.set_animation(1);
-
                 }
             },
             Job::Build => {
@@ -104,24 +113,24 @@ impl Dino {
         }
 
         let mut sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
-        if self.job == Job::Idle {
+        let is_idle = self.job == Job::Idle;
+        if is_idle {
             sp = 0.0;
         }
         self.x += sp;
-
 
         let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
         let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
         let g3 = ground.get_cell(self.x as i32 +8, self.y as i32 +18);
         // Climb
-        if g != CellType::Empty && g2 != CellType::Empty {
+        if is_solid(g) && is_solid(g2) {
             self.y -= 1.0;
         }
         // Fall
-        if g == CellType::Empty && g2 == CellType::Empty {
+        if !is_solid(g) && !is_solid(g2) {
             self.vy += 1.0;
             self.y += self.vy;
-            if g3 == CellType::Empty {
+            if !is_solid(g3) {
                 self.x -= sp;
                 self.y += 1.0;
             }
@@ -133,7 +142,7 @@ impl Dino {
             self.x = -16.0;
         }
         if self.x < -16.0 {
-            self.x = w as f32;
+            self.x = (w as f32) - 1.0;
         }
         self.sprite.update();
     }

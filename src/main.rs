@@ -11,10 +11,14 @@ mod dino;
 mod resources;
 mod maf;
 
+pub const WOODBROWN: Color = Color::new(0.40, 0.32, 0.21, 1.00);
+
 #[macroquad::main("Life")]
 async fn main() {
     let w = screen_width() as usize;
     let h = screen_height() as usize;
+
+    rand::srand(macroquad::miniquad::date::now() as _);
 
     let mut selected = CellType::Sand;
 
@@ -27,7 +31,7 @@ async fn main() {
     for _ in 0..25 {
         let mut d = Dino::new(
             rand::gen_range(0, w) as f32,
-            rand::gen_range(h / 2, h - 100) as f32,
+            rand::gen_range(0, h /2) as f32,
             rand::gen_range(10, 30) as f32 / 10.0);
         if one_in(2) {
             d.dir = Dir::West;
@@ -147,7 +151,7 @@ async fn main() {
                     CellType::Sand => BROWN,
                     CellType::AntiSand => GREEN,
                     CellType::Water => BLUE,
-                    CellType::Wood => DARKBROWN,
+                    CellType::Wood => WOODBROWN,
                 },
             );
         }
@@ -162,6 +166,10 @@ async fn main() {
                 let xoff = if d.dir == Dir::West { 4 } else { 10 };
                 ground.set_cell((d.x as i32)+xoff, (d.y as i32)+16, CellType::Wood, true);
                 ground.set_cell((d.x as i32)+xoff, (d.y as i32)+17, CellType::Wood, true);
+                ground.set_cell((d.x as i32)+xoff, (d.y as i32)+18, CellType::Wood, true);
+                ground.set_cell((d.x as i32)+xoff+1, (d.y as i32)+16, CellType::Wood, true);
+                ground.set_cell((d.x as i32)+xoff+1, (d.y as i32)+17, CellType::Wood, true);
+                ground.set_cell((d.x as i32)+xoff+1, (d.y as i32)+18, CellType::Wood, true);
             }
 
             draw_texture_ex(
