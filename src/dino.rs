@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 use macroquad::experimental::animation::*;
 use crate::ground::{Ground, CellType};
+use crate::maf::one_in;
 
 pub struct Dino {
     pub x: f32,
@@ -38,10 +39,6 @@ impl Dir {
     }
 }
 
-fn one_in(num: i32) -> bool {
-    return rand::gen_range(0, num) == 1;
-}
-
 impl Dino {
     pub fn new(x:f32, y:f32, sp: f32) -> Dino {
         Dino {
@@ -56,11 +53,18 @@ impl Dino {
                 16,
                 &[
                     Animation {
+                        name: "idle".to_string(),
+                        row: 0,
+                        frames: 1,
+                        fps: 6,
+                    },
+                    Animation {
                         name: "walk".to_string(),
                         row: 0,
                         frames: 4,
                         fps: 6,
                     },
+
                 ],
                 true,
             )
@@ -77,6 +81,7 @@ impl Dino {
             Job::Idle => {
                 if one_in(500) {
                     self.job = Job::Walk;
+                    self.sprite.set_animation(0);
                 }
             },
             Job::Walk => {
@@ -86,11 +91,14 @@ impl Dino {
                     } else {
                         self.job = Job::Build;
                     }
+                    self.sprite.set_animation(1);
+
                 }
             },
             Job::Build => {
                 if one_in(500) {
                     self.job = Job::Idle;
+                    self.sprite.set_animation(0);
                 }
             }
         }
