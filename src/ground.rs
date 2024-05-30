@@ -115,9 +115,10 @@ impl Ground {
             self.moved[i] = false;
         }
 
-        for y in 0..self.h as i32 {
+        for y in (0..self.h as i32).rev() {
             for x in 0..self.w as i32 {
                 let cell = self.get_cell(x, y);
+                //println!("{} {} {}", x, y, cell);
 
                 if cell == CellType::Empty { continue; }
                 if cell == CellType::Wood { continue; }
@@ -196,7 +197,7 @@ impl Ground {
         let moved = self.moved[cell];
         if !moved {
             self.cells[cell] = val;
-            self.moved[cell] = val != CellType::Empty;
+            self.moved[cell] = true;//val != CellType::Empty;
         }
         return !moved;
     }
