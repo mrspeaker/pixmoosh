@@ -158,10 +158,10 @@ impl Ground {
                 let dir = if i % 2 == 0 { -1} else {1};
                 let cell_l = self.get_cell(x-1, y);
                 let cell_r = self.get_cell(x+1, y);
+                let cell_bl = if is_free(cell_l) { self.get_cell(x-1, y+1) } else { CellType::Bedrock } ;
+                let cell_br = if is_free(cell_r) { self.get_cell(x+1, y+1) } else { CellType::Bedrock };
 
                 if cell != CellType::Water {
-                    let cell_bl = if is_free(cell_l) { self.get_cell(x-1, y+1) } else {CellType::Bedrock} ;
-                    let cell_br = if is_free(cell_r) { self.get_cell(x+1, y+1) } else { CellType::Bedrock };
                     match (cell_bl, cell_br) {
                         (CellType::Empty, CellType::Empty) => {
                             self.swap(x, y, dir, 1);
@@ -177,17 +177,26 @@ impl Ground {
                         }
                     }
                 } else {
-                    if cell_l != CellType::Empty && cell_r != CellType::Empty {
-                        continue;
+                    match (cell_bl, cell_br) {
+                        (CellType::Empty, CellType::Empty) => {
+                            self.swap(x, y, dir, 1);
+                        },
+                        (_, CellType::Empty) => {
+                            self.swap(x, y, 1, 1);
+                        },
+                        (CellType::Empty, _) => {
+                            self.swap(x, y, -1, 1);
+                        },
+                        _ => {
+                            if cell_l == CellType::Empty && cell_r == CellType::Empty {
+                                self.swap(x, y, dir, 0);
+                            } else if cell_l == CellType::Empty {
+                                self.swap(x, y, -1, 0);
+                            } else {
+                                self.swap(x, y, 1, 0);
+                            }
+                        }
                     }
-                    if cell_l == CellType::Empty && cell_r == CellType::Empty {
-                        self.swap(x, y, dir, 0);
-                    } else if cell_l == CellType::Empty {
-                        self.swap(x, y, -1, 0);
-                    } else {
-                        self.swap(x, y, 1, 0);
-                    }
-
                 }
             }
         }
