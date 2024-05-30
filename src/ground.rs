@@ -215,11 +215,12 @@ impl Ground {
             return false;
         }
         let cell = y as usize * self.w + x as usize;
-        let moved = self.moved[cell];
-        if !moved {
-            self.cells[cell] = val;
-            self.moved[cell] = val != CellType::Empty;
-        }
-        return !moved;
+        //let moved = self.moved[cell];
+        //if !moved {
+         self.cells[cell] = val;
+         self.moved[cell] = true;// val != CellType::Empty;
+        //}
+        //return !moved;
+        return true;
     }
 }
