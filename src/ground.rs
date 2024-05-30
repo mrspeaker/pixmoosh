@@ -20,6 +20,19 @@ impl fmt::Display for CellType {
     }
 }
 
+pub fn is_solid(t: CellType) -> bool {
+    match t {
+        CellType::Wood => true,
+        CellType::Sand => true,
+        CellType::Bedrock => true,
+        _ => false
+    }
+}
+
+pub fn is_free(t: CellType) -> bool {
+    return !is_solid(t);
+}
+
 pub struct Cell {
     kind: CellType
 }
@@ -143,10 +156,12 @@ impl Ground {
                 }
 
                 let dir = if i % 2 == 0 { -1} else {1};
+                let cell_l = self.get_cell(x-1, y);
+                let cell_r = self.get_cell(x+1, y);
 
                 if cell != CellType::Water {
-                    let cell_bl = self.get_cell(x-1, y+1);
-                    let cell_br = self.get_cell(x+1, y+1);
+                    let cell_bl = if is_free(cell_l) { self.get_cell(x-1, y+1) } else {CellType::Bedrock} ;
+                    let cell_br = if is_free(cell_r) { self.get_cell(x+1, y+1) } else { CellType::Bedrock };
                     match (cell_bl, cell_br) {
                         (CellType::Empty, CellType::Empty) => {
                             self.swap(x, y, dir, 1);
@@ -162,9 +177,6 @@ impl Ground {
                         }
                     }
                 } else {
-                    let cell_l = self.get_cell(x-1, y);
-                    let cell_r = self.get_cell(x+1, y);
-
                     if cell_l != CellType::Empty && cell_r != CellType::Empty {
                         continue;
                     }
@@ -197,7 +209,7 @@ impl Ground {
         let moved = self.moved[cell];
         if !moved {
             self.cells[cell] = val;
-            self.moved[cell] = true;//val != CellType::Empty;
+            self.moved[cell] = val != CellType::Empty;
         }
         return !moved;
     }

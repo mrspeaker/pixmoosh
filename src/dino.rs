@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 use macroquad::experimental::animation::*;
-use crate::ground::{Ground, CellType, GroundChange};
+use crate::ground::{Ground, CellType, GroundChange, is_solid};
 use crate::maf::one_in;
 
 pub struct Dino {
@@ -27,15 +27,6 @@ pub enum Job {
     Walk,
     Build,
     Dig,
-}
-
-fn is_solid(t: CellType) -> bool {
-    match t {
-        CellType::Wood => true,
-        CellType::Sand => true,
-        CellType::Bedrock => true,
-        _ => false
-    }
 }
 
 impl Dir {
