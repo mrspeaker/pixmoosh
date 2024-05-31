@@ -3,11 +3,13 @@ use macroquad::prelude::*;
 use macroquad::ui::{root_ui, hash};
 use ground::{Ground, CellType};
 use dino::{Dino, Dir, Job};
+use person::{Person};
 use maf::one_in;
 use resources::load_resources;
 
 mod ground;
 mod dino;
+mod person;
 mod resources;
 mod maf;
 mod tests;
@@ -47,6 +49,20 @@ async fn main() {
         dinos.push(d);
     }
 
+    let mut peeps: Vec<Person> = Vec::new();
+    for _ in 0..25 {
+        let mut d = Person::new(
+            rand::gen_range(0, w) as f32,
+            rand::gen_range(0, h /2) as f32,
+            rand::gen_range(10, 30) as f32 / 10.0);
+        if one_in(2) {
+            d.dir = Dir::West;
+        }
+        if one_in(2) {
+            d.job = Job::Idle;
+        }
+        peeps.push(d);
+    }
 
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
@@ -119,6 +135,49 @@ async fn main() {
                 }
             );
         }
+
+        for d in dinos.iter_mut() {
+            let v = d.update(&ground, w, h);
+
+            for gc in v {
+                ground.set_cell(gc.x, gc.y, gc.cell);
+            }
+
+            draw_texture_ex(
+                &resources.dino,
+                d.x,
+                d.y,
+                WHITE,
+                DrawTextureParams {
+                    source: Some(d.sprite.frame().source_rect),
+                    dest_size: Some(d.sprite.frame().dest_size),
+                    flip_x: d.dir == Dir::West,
+                    ..Default::default()
+                }
+            );
+        }
+
+        for d in peeps.iter_mut() {
+            let v = d.update(&ground, w, h);
+
+            for gc in v {
+                ground.set_cell(gc.x, gc.y, gc.cell);
+            }
+
+            draw_texture_ex(
+                &resources.walk,
+                d.x,
+                d.y,
+                WHITE,
+                DrawTextureParams {
+                    source: Some(d.sprite.frame().source_rect),
+                    dest_size: Some(d.sprite.frame().dest_size),
+                    flip_x: d.dir == Dir::West,
+                    ..Default::default()
+                }
+            );
+        }
+
 
         let _ = root_ui()
             .style_builder()
