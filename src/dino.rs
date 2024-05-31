@@ -26,6 +26,7 @@ pub enum Job {
     Idle,
     Walk,
     Build,
+    Bridge,
     Dig,
 }
 
@@ -99,12 +100,22 @@ impl Dino {
                         self.job = Job::Idle;
                         self.sprite.set_animation(0);
                     } else {
-                        self.job = Job::Build;
+                        if one_in(2) {
+                            self.job = Job::Build;
+                        } else {
+                            self.job = Job::Bridge;
+                        }
                         self.sprite.set_animation(1);
                     }
                 }
             },
             Job::Build => {
+                if one_in(500) {
+                    self.job = Job::Idle;
+                    self.sprite.set_animation(0);
+                }
+            },
+            Job::Bridge => {
                 if one_in(500) {
                     self.job = Job::Idle;
                     self.sprite.set_animation(0);
@@ -147,26 +158,36 @@ impl Dino {
         // Jobs
         if self.job == Job::Dig {
             self.vy = 0.0;
-            v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 16, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+7, y:(self.y as i32) + 16, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 16, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 16, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 16, cell:CellType::Empty});
+            v.push(((self.x as i32)+6, (self.y as i32) + 16, CellType::Empty));
+            v.push(((self.x as i32)+7, (self.y as i32) + 16, CellType::Empty));
+            v.push(((self.x as i32)+8, (self.y as i32) + 16, CellType::Empty));
+            v.push(((self.x as i32)+9, (self.y as i32) + 16, CellType::Empty));
+            v.push(((self.x as i32)+10, (self.y as i32) + 16, CellType::Empty));
 
-            v.push(GroundChange{x:(self.x as i32)+6, y:(self.y as i32) + 17, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+7, y:(self.y as i32) + 17, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+8, y:(self.y as i32) + 17, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+9, y:(self.y as i32) + 17, cell:CellType::Empty});
-            v.push(GroundChange{x:(self.x as i32)+10, y:(self.y as i32) + 17, cell:CellType::Empty});
+            v.push(((self.x as i32)+6, (self.y as i32) + 17, CellType::Empty));
+            v.push(((self.x as i32)+7, (self.y as i32) + 17, CellType::Empty));
+            v.push(((self.x as i32)+8, (self.y as i32) + 17, CellType::Empty));
+            v.push(((self.x as i32)+9, (self.y as i32) + 17, CellType::Empty));
+            v.push(((self.x as i32)+10, (self.y as i32) + 17, CellType::Empty));
         }
         if self.job == Job::Build {
             let xoff = if self.dir == Dir::West { 4 } else { 10 };
-            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 16, cell:CellType::Wood});
-            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 17, cell:CellType::Wood});
-            v.push(GroundChange{x:(self.x as i32)+xoff, y:(self.y as i32) + 18, cell:CellType::Wood});
-            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 16, cell:CellType::Wood});
-            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 17, cell:CellType::Wood});
-            v.push(GroundChange{x:(self.x as i32)+xoff+1, y:(self.y as i32) + 18, cell:CellType::Wood});
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 16, CellType::Wood));
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 17, CellType::Wood));
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 18, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 16, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 17, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 18, CellType::Wood));
+        }
+
+        if self.job == Job::Bridge {
+            let xoff = if self.dir == Dir::West { 4 } else { 10 };
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 17, CellType::Wood));
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 18, CellType::Wood));
+            v.push(((self.x as i32)+xoff, (self.y as i32) + 19, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 17, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 18, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 1, CellType::Wood));
         }
 
         // Wrap

@@ -33,14 +33,10 @@ pub fn is_free(t: CellType) -> bool {
     return !is_solid(t);
 }
 
+pub type GroundChange = (i32, i32, CellType);
+
 pub struct Cell {
     kind: CellType
-}
-
-pub struct GroundChange {
-    pub x: i32,
-    pub y: i32,
-    pub cell: CellType
 }
 
 pub struct Ground {

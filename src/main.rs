@@ -119,28 +119,7 @@ async fn main() {
             let v = d.update(&ground, w, h);
 
             for gc in v {
-                ground.set_cell(gc.x, gc.y, gc.cell);
-            }
-
-            draw_texture_ex(
-                &resources.dino,
-                d.x,
-                d.y,
-                WHITE,
-                DrawTextureParams {
-                    source: Some(d.sprite.frame().source_rect),
-                    dest_size: Some(d.sprite.frame().dest_size),
-                    flip_x: d.dir == Dir::West,
-                    ..Default::default()
-                }
-            );
-        }
-
-        for d in dinos.iter_mut() {
-            let v = d.update(&ground, w, h);
-
-            for gc in v {
-                ground.set_cell(gc.x, gc.y, gc.cell);
+                ground.set_cell(gc.0, gc.1, gc.2);
             }
 
             draw_texture_ex(
@@ -161,7 +140,7 @@ async fn main() {
             let v = d.update(&ground, w, h);
 
             for gc in v {
-                ground.set_cell(gc.x, gc.y, gc.cell);
+                ground.set_cell(gc.0, gc.1, gc.2);
             }
 
             draw_texture_ex(
