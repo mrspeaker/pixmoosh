@@ -123,22 +123,12 @@ mod tests {
             g.set_cell(3, i, CellType::Sand);
             g.set_cell(4, i, CellType::Sand);
         }
-        println!("{}", g);
         g.update();
 
         // Should be:
         // ...S...
         // ..SSS..
         // .SSSSS.
-
-        // but is:
-        // .......
-        // ..SSSS.
-        // .SSSSS.
-
-        // I think the top-center sand sneaks in...
-
-        println!("{}", g);
 
         // Bottom layer
         assert_eq!(g.get_cell(1,2), CellType::Sand);

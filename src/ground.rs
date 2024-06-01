@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use std::fmt;
+use crate::maf::one_in;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CellType {
@@ -9,6 +10,7 @@ pub enum CellType {
     Sand,
     Water,
     Wood,
+    Tree,
 }
 impl fmt::Display for CellType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -20,9 +22,18 @@ impl fmt::Display for CellType {
     }
 }
 
+pub fn is_static(t: CellType) -> bool {
+    match t {
+        CellType::Wood => true,
+        CellType::Tree => true,
+        _ => false
+    }
+}
+
 pub fn is_solid(t: CellType) -> bool {
     match t {
         CellType::Wood => true,
+        CellType::Tree => true,
         CellType::Sand => true,
         CellType::Bedrock => true,
         _ => false
@@ -91,9 +102,9 @@ impl Ground {
                     self.set_cell(x, y, CellType::Wood);
                 }
                 else  {
-                    if rand::gen_range(0, 5) == 0 {
+                    /*if rand::gen_range(0, 25) == 0 {
                         self.set_cell(x, y, CellType::Sand);
-                    }
+                    })*/
                 }
             }
         }
@@ -115,10 +126,6 @@ impl Ground {
         }
     }
 
-    pub fn rnd(&mut self) -> i32 {
-        return rand::gen_range(0, 10);
-    }
-
     pub fn update(&mut self) {
         for i in 0..self.cells.len() {
             self.moved[i] = false;
@@ -131,15 +138,31 @@ impl Ground {
 
                 if cell == CellType::Empty { continue; }
                 if cell == CellType::Wood { continue; }
+
                 let i = y as usize * self.w + x as usize;
                 if self.moved[i] {
                     //println!("moved");
                     continue;
                 }
 
+
+                // Trees grow up
+                if cell == CellType::Tree {
+                    let cell_u = self.get_cell(x, y-1);
+                    if cell_u == CellType::Empty {
+                        if one_in(10) {
+                            self.set_cell(x, y - 1, CellType::Tree);
+                        }
+                        continue;
+                    }
+
+                    continue;
+                }
+
+
                 let cell_d = self.get_cell(x, y+1);
 
-                // Everything falls down...
+                // Everything else falls down...
                 if cell_d == CellType::Empty {
                     self.swap(x, y, 0, 1);
                     continue;

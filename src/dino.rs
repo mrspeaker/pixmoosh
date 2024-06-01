@@ -125,22 +125,27 @@ impl Dino {
                 if one_in(50) {
                     self.job = Job::Idle;
                     self.sprite.set_animation(0);
+                    v.push(((self.x as i32)+6, (self.y as i32) + 17, CellType::Tree));
+                    v.push(((self.x as i32)+7, (self.y as i32) + 17, CellType::Tree));
+                    v.push(((self.x as i32)+8, (self.y as i32) + 17, CellType::Tree));
                 }
             }
         }
 
-        let mut sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
+        let sp = if self.dir == Dir::West { -0.2 } else { 0.2 };
+        let mut xo = sp;
         let is_idle = self.job == Job::Idle;
         if is_idle || self.job == Job::Dig {
-            sp = 0.0;
+            xo = 0.0;
         }
-        self.x += sp;
-
         let g = ground.get_cell(self.x as i32 +8, self.y as i32 +16);
         let g2 = ground.get_cell(self.x as i32 +8, self.y as i32 +17);
         // Climb
         if is_solid(g) && is_solid(g2) {
             self.y -= 1.0;
+            if g == CellType::Tree {
+                xo = 0.0;
+            }
         }
         // Fall
         if !is_solid(g) && !is_solid(g2) {
@@ -154,6 +159,8 @@ impl Dino {
         } else {
             self.vy = 0.0;
         }
+
+        self.x += xo;
 
         // Jobs
         if self.job == Job::Dig {
@@ -187,7 +194,7 @@ impl Dino {
             v.push(((self.x as i32)+xoff, (self.y as i32) + 19, CellType::Wood));
             v.push(((self.x as i32)+xoff+1, (self.y as i32) + 17, CellType::Wood));
             v.push(((self.x as i32)+xoff+1, (self.y as i32) + 18, CellType::Wood));
-            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 1, CellType::Wood));
+            v.push(((self.x as i32)+xoff+1, (self.y as i32) + 19, CellType::Wood));
         }
 
         // Wrap

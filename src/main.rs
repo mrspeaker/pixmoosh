@@ -19,6 +19,7 @@ pub const WATER: Color = Color::new(0.325, 0.549, 0.549, 1.00);
 pub const SAND: Color = Color::new(0.862, 0.549, 0.227, 1.00);
 pub const SAND2: Color = Color::new(0.752, 0.49, 0.29, 1.00);
 pub const WOOD: Color = Color::new(0.678, 0.419, 0.282, 1.00);
+pub const TREE: Color = Color::new(0.3, 0.6, 0.2, 1.00);
 
 #[macroquad::main("Life")]
 async fn main() {
@@ -35,7 +36,7 @@ async fn main() {
     ground.init();
 
     let mut dinos: Vec<Dino> = Vec::new();
-    for _ in 0..25 {
+    for _ in 0..5 {
         let mut d = Dino::new(
             rand::gen_range(0, w) as f32,
             rand::gen_range(0, h /2) as f32,
@@ -50,7 +51,7 @@ async fn main() {
     }
 
     let mut peeps: Vec<Person> = Vec::new();
-    for _ in 0..25 {
+    for _ in 0..5 {
         let mut d = Person::new(
             rand::gen_range(0, w) as f32,
             rand::gen_range(0, h /2) as f32,
@@ -76,7 +77,11 @@ async fn main() {
             let size = 8;
             for i in -size..size {
                 for j in -size..size {
-                    ground.set_cell((x as i32)+i, (y as i32)-j, c);
+                    if ((i * i + j * j) as f32).sqrt() < size as f32 {
+                        if c == CellType::Wood || one_in(3) {
+                            ground.set_cell((x as i32)+i, (y as i32)-j, c);
+                        }
+                    }
                 }
             }
         }
@@ -107,6 +112,7 @@ async fn main() {
                     CellType::AntiSand => GREEN,
                     CellType::Water => WATER,
                     CellType::Wood => WOOD,
+                    CellType::Tree => TREE,
                 },
             );
         }
@@ -178,6 +184,11 @@ async fn main() {
             if ui.button(None, "Water") {
                 selected = CellType::Water;
             }
+            ui.same_line(100.);
+            if ui.button(None, "Tree") {
+                selected = CellType::Tree;
+            }
+
         });
 
         next_frame().await
